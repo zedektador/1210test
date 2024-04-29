@@ -8,6 +8,7 @@ use App\Services\TaskService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Yajra\DataTables\DataTables;
 
 class TaskController extends Controller
 {
@@ -20,14 +21,14 @@ class TaskController extends Controller
 
     public function index(Request $request)
     {
-        $tasks = $this->taskService->getAllTasksPaginated(10);
-        return view('tasks.index', compact('tasks'));
+        if(\request()->ajax()) return $this->taskService->getDataTables();
+        return view('tasks.index', );
     }
 
 
     public function create()
     {
-        $tasks = $this->taskService->getAll();
+        $tasks = $this->taskService->getAllParentTask();
         return view('tasks.create', compact('tasks'));
     }
 
@@ -51,8 +52,6 @@ class TaskController extends Controller
     public function show(Task $task)
     {
         return redirect()->route('tasks.index');
-
-//        return view('tasks.show', compact('task'));
     }
 
     public function edit(Task $task)
@@ -61,7 +60,7 @@ class TaskController extends Controller
             abort(403); // Or redirect to a different page
         }
 
-        $tasks = $this->taskService->getAllExcept($task?->id );
+        $tasks = $this->taskService->getAllParentTaskExcept($task?->id );
 
         return view('tasks.edit', compact('task', 'tasks'));
     }
@@ -78,9 +77,9 @@ class TaskController extends Controller
             // Add the image path to the task data
             $data['image_path'] = $imagePath;
         }
-        $task = $this->taskService->update($task->id, $data);
+        $this->taskService->update($task->id, $data);
 
-        return redirect()->route('tasks.index');
+        return redirect()->route('tasks.index')->with('success', 'Task updated successfully.');
     }
 
     public function destroy(Task $task)

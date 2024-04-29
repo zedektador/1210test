@@ -11,9 +11,9 @@ class EloquentTaskRepository implements TaskRepositoryInterface
         return Task::paginate($perPage);
     }
 
-    public function getAll()
+    public function getUserTask($userId)
     {
-        return Task::all();
+        return Task::where('user_id', $userId)->get();
     }
 
     public function findById($id)
@@ -37,8 +37,17 @@ class EloquentTaskRepository implements TaskRepositoryInterface
     {
         return Task::destroy($id);
     }
-    public function getAllExcept($id)
+    public function getAllParentTaskExcept($id)
     {
-        return Task::whereNotIn('id', [$id])->get();
+        return Task::whereNotIn('id', [$id])->whereNull('parent_task_id')->get();
+    }
+    public function getAllParentTask()
+    {
+        return Task::whereNull('parent_task_id')->get();
+    }
+
+    public function getAll()
+    {
+        // TODO: Implement getAll() method.
     }
 }

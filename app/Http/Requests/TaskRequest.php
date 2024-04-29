@@ -32,7 +32,7 @@ class TaskRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            if (Auth::id() != $this->task->user_id) {
+            if ($this->task && Auth::id() != $this->task->user_id) {
                 $validator->errors()->add('user_id', 'You are not authorized to update this task.');
             }
         });

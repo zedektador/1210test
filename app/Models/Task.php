@@ -10,6 +10,7 @@ class Task extends Model
 {
     use HasFactory, SoftDeletes;
 
+
     protected $fillable = ['title', 'content', 'status', 'parent_task_id','image_path', 'user_id'];
 
     public function parentTask()
