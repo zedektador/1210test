@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TaskRequest;
+use App\Jobs\ProcessMediaAttachments;
 use App\Models\Task;
 use App\Services\TaskService;
 use Illuminate\Http\Request;
@@ -35,15 +36,11 @@ class TaskController extends Controller
     public function store(TaskRequest $request)
     {
         $data = array_merge($request->validated(), ['user_id' => Auth::id()]);
+        $task = $this->taskService->create($data);
 
         if ($request->hasFile('image')) {
-            // Store the uploaded image locally
-            $imagePath = $request->file('image')->store('task_images', 'public');
-
-            // Add the image path to the task data
-            $data['image_path'] = $imagePath;
+            ProcessMediaAttachments::dispatch($request->file('image'), $task);
         }
-        $task = $this->taskService->create($data);
 
 
         return redirect()->route('tasks.index');
@@ -68,16 +65,18 @@ class TaskController extends Controller
     public function update(TaskRequest $request, Task $task)
     {
         $data = $request->validated();
+        $task = $this->taskService->update($task->id, $data);
+
         if ($request->hasFile('image')) {
             if ($task->image_path) {
                 Storage::disk('public')->delete($task->image_path);
             }
-            $imagePath = $request->file('image')->store('task_images', 'public');
+            $task = $this->taskService->create($data);
 
-            // Add the image path to the task data
-            $data['image_path'] = $imagePath;
+            if ($request->hasFile('image')) {
+                ProcessMediaAttachments::dispatch($request->file('image'), $task);
+            }
         }
-        $this->taskService->update($task->id, $data);
 
         return redirect()->route('tasks.index')->with('success', 'Task updated successfully.');
     }
